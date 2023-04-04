@@ -10,7 +10,7 @@ func TestHello(t *testing.T) {
 		}
 	}
 
-	t.Run("Should say hello to people", func(t *testing.T) {
+	t.Run("Should say Hello Charmaine!", func(t *testing.T) {
 		result := Hello("Charmaine", "")
 		expected := "Hello, Charmaine!"
 		checkRightMessage(t, result, expected)

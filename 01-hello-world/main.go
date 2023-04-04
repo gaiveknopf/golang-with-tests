@@ -12,14 +12,19 @@ func Hello(name, language string) string {
 	if name == "" {
 		name = "world"
 	}
+	return fmt.Sprintf("%s%s!", prefixGen(language), name)
+}
 
-	if language == "Spanish" {
-		return fmt.Sprintf("%s%s!", prefixHelloSpanish, name)
+func prefixGen(language string) (prefix string) {
+	switch language {
+	case "Spanish":
+		prefix = prefixHelloSpanish
+	case "French":
+		prefix = prefixHelloFrench
+	default:
+		prefix = prefixHelloEnglish
 	}
-	if language == "French" {
-		return fmt.Sprintf("%s%s!", prefixHelloFrench, name)
-	}
-	return fmt.Sprintf("%s%s!", prefixHelloEnglish, name)
+	return
 }
 
 func main() {
