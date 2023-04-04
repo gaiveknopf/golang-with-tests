@@ -2,8 +2,13 @@ package main
 
 import "fmt"
 
+const prefixHelloEnglish = "Hello, "
+
 func Hello(name string) string {
-	return fmt.Sprintf("Hello, %s!", name)
+	if name == "" {
+		name = "world"
+	}
+	return fmt.Sprintf("%s%s!", prefixHelloEnglish, name)
 }
 
 func main() {
