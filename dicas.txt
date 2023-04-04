@@ -1,0 +1,2 @@
+testes de benchmark
+go test -bench=. na pasta do teste
