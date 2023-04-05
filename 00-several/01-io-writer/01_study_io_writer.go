@@ -1,4 +1,4 @@
-package _0_several
+package _1_io_writer
 
 import (
 	"io"
