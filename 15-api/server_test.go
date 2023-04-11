@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -9,25 +9,6 @@ import (
 	"reflect"
 	"testing"
 )
-
-type StubStoragePlayer struct {
-	scores           map[string]int
-	victoryRegisters []string
-	league           []Player
-}
-
-func (s *StubStoragePlayer) GetPlayerScore(name string) int {
-	score := s.scores[name]
-	return score
-}
-
-func (s *StubStoragePlayer) VictoryRegister(name string) {
-	s.victoryRegisters = append(s.victoryRegisters, name)
-}
-
-func (s *StubStoragePlayer) GetLeagueTable() []Player {
-	return s.league
-}
 
 func TestGetPlayers(t *testing.T) {
 	storage := StubStoragePlayer{
@@ -71,12 +52,12 @@ func TestVictoryRegister(t *testing.T) {
 
 		checkResponseStatusCode(t, response.Code, http.StatusAccepted)
 
-		if len(storage.victoryRegisters) != 1 {
-			t.Fatalf("checked %d call on VictoryRegister, want %d", len(storage.victoryRegisters), 1)
+		if len(storage.winCalls) != 1 {
+			t.Fatalf("checked %d call on RecordWin, want %d", len(storage.winCalls), 1)
 		}
 
-		if storage.victoryRegisters[0] != player {
-			t.Errorf("did not register the winner correctly, got '%s', want '%s'", storage.victoryRegisters[0], player)
+		if storage.winCalls[0] != player {
+			t.Errorf("did not register the winner correctly, got '%s', want '%s'", storage.winCalls[0], player)
 		}
 	})
 }

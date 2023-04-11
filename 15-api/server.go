@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"encoding/json"
@@ -6,10 +6,10 @@ import (
 	"net/http"
 )
 
-type DatabasePlayer interface {
+type PlayerStorage interface {
 	GetPlayerScore(name string) int
-	VictoryRegister(name string)
-	GetLeagueTable() []Player
+	RecordWin(name string)
+	GetLeague() League
 }
 
 type Player struct {
@@ -18,11 +18,11 @@ type Player struct {
 }
 
 type PlayerServer struct {
-	storage DatabasePlayer
+	storage PlayerStorage
 	http.Handler
 }
 
-func NewPlayerServer(storage DatabasePlayer) *PlayerServer {
+func NewPlayerServer(storage PlayerStorage) *PlayerServer {
 	p := new(PlayerServer)
 	p.storage = storage
 	router := http.NewServeMux()
@@ -34,7 +34,7 @@ func NewPlayerServer(storage DatabasePlayer) *PlayerServer {
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
-	err := json.NewEncoder(w).Encode(p.storage.GetLeagueTable())
+	err := json.NewEncoder(w).Encode(p.storage.GetLeague())
 	if err != nil {
 		return
 	}
@@ -65,6 +65,6 @@ func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
 }
 
 func (p *PlayerServer) victoryRegister(w http.ResponseWriter, player string) {
-	p.storage.VictoryRegister(player)
+	p.storage.RecordWin(player)
 	w.WriteHeader(http.StatusAccepted)
 }

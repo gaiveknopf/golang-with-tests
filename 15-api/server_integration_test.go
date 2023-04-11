@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"net/http"
@@ -6,8 +6,12 @@ import (
 	"testing"
 )
 
-func TestRegisterVictoriesAndGetThisVictories(t *testing.T) {
-	storage := NewMemoryPlayerStorage()
+func TestRecordingWinsAndRetrievingThem(t *testing.T) {
+	database, cleanDatabase := createTempFile(t, "")
+	defer cleanDatabase()
+	storage, err := NewFileDB(database)
+	checkNoError(t, err)
+
 	server := NewPlayerServer(storage)
 	player := "Pepper"
 
