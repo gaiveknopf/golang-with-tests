@@ -32,3 +32,14 @@ func TestHelloWorld(t *testing.T) {
 
 	require.Equal(t, "Hello World!", response.Body.String())
 }
+
+func BenchmarkHelloWorld(b *testing.B) {
+	s := CreateNewServer()
+	s.MountHandlers()
+
+	req, _ := http.NewRequest("GET", "/", nil)
+
+	for i := 0; i < b.N; i++ {
+		executeRequest(req, s)
+	}
+}
