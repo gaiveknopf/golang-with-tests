@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-type PlayerStorage interface {
+type PlayerStore interface {
 	GetPlayerScore(name string) int
 	RecordWin(name string)
 	GetLeague() League
@@ -18,11 +18,11 @@ type Player struct {
 }
 
 type PlayerServer struct {
-	storage PlayerStorage
+	storage PlayerStore
 	http.Handler
 }
 
-func NewPlayerServer(storage PlayerStorage) *PlayerServer {
+func NewPlayerServer(storage PlayerStore) *PlayerServer {
 	p := new(PlayerServer)
 	p.storage = storage
 	router := http.NewServeMux()

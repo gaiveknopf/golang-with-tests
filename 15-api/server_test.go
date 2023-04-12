@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetPlayers(t *testing.T) {
-	storage := StubStoragePlayer{
+	storage := StubPlayerStore{
 		map[string]int{
 			"Maria": 20,
 			"Pedro": 10,
@@ -36,7 +36,7 @@ func TestGetPlayers(t *testing.T) {
 }
 
 func TestVictoryRegister(t *testing.T) {
-	storage := StubStoragePlayer{
+	storage := StubPlayerStore{
 		map[string]int{},
 		nil, nil,
 	}
@@ -92,7 +92,7 @@ func checkResponseStatusCode(t *testing.T, got, want int) {
 }
 
 func TestLeague(t *testing.T) {
-	storage := StubStoragePlayer{}
+	storage := StubPlayerStore{}
 	server := NewPlayerServer(&storage)
 
 	t.Run("should returns 200 on /league", func(t *testing.T) {
@@ -118,7 +118,7 @@ func TestLeague(t *testing.T) {
 			{"Tiest", 14},
 		}
 
-		storage := StubStoragePlayer{nil, nil, want}
+		storage := StubPlayerStore{nil, nil, want}
 		server := NewPlayerServer(&storage)
 
 		request := newLeagueRequest()

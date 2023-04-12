@@ -2,46 +2,55 @@ package api
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
-	"time"
 )
 
-type BlindAlerter interface {
-	ScheduleAlertAt(duration time.Duration, amount int)
-}
-
 type CLI struct {
-	playerStorage PlayerStorage
+	playerStorage PlayerStore
 	in            *bufio.Scanner
-	alerter       BlindAlerter
+	out           io.Writer
+	game          Game
 }
 
-func NewCLI(store PlayerStorage, in io.Reader, alerter BlindAlerter) *CLI {
+func NewCLI(in io.Reader, out io.Writer, game Game) *CLI {
 	return &CLI{
-		playerStorage: store,
-		in:            bufio.NewScanner(in),
-		alerter:       alerter,
+		in:   bufio.NewScanner(in),
+		out:  out,
+		game: game,
 	}
 }
+
+const (
+	PlayerPrompt         = "please enter the number of players: "
+	BadPlayerInputErrMsg = "bad value received for number of players"
+	BadWinnerInputErrMsg = "bad value received for winner"
+)
 
 func (cli *CLI) PlayPoker() {
-	cli.scheduleBlindAlerts()
-	userInput := cli.readLine()
-	cli.playerStorage.RecordWin(extractWinner(userInput))
-}
-
-func (cli *CLI) scheduleBlindAlerts() {
-	blinds := []int{100, 200, 300, 400, 500, 600, 800, 1000, 2000, 4000, 8000}
-	blindTime := 0 * time.Second
-	for _, blind := range blinds {
-		cli.alerter.ScheduleAlertAt(blindTime, blind)
-		blindTime = blindTime + 10*time.Second
+	_, _ = fmt.Fprint(cli.out, PlayerPrompt)
+	numberOfPlayers, err := strconv.Atoi(cli.readLine())
+	if err != nil {
+		_, _ = fmt.Fprint(cli.out, BadPlayerInputErrMsg)
+		return
 	}
+	cli.game.Start(numberOfPlayers)
+	winnerInput := cli.readLine()
+	winner, err := extractWinner(winnerInput)
+	if err != nil {
+		_, _ = fmt.Fprint(cli.out, BadWinnerInputErrMsg)
+		return
+	}
+	cli.game.Finish(winner)
 }
 
-func extractWinner(userInput string) string {
-	return strings.Replace(userInput, " wins", "", 1)
+func extractWinner(userInput string) (string, error) {
+	if !strings.Contains(userInput, " wins") {
+		return "", fmt.Errorf(BadWinnerInputErrMsg)
+	}
+	return strings.Replace(userInput, " wins", "", 1), nil
 }
 
 func (cli *CLI) readLine() string {

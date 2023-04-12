@@ -10,15 +10,17 @@ import (
 const dbFileName = "../../game.db.json"
 
 func main() {
+	store, _close, err := api.FileSystemPlayerStoreFromFile(dbFileName)
 
-	storage, closer, err := api.FileSystemPlayerStoreFromFile(dbFileName)
 	if err != nil {
-		log.Fatalf("problem creating file system player store, %v ", err)
+		log.Fatal(err)
 	}
-	defer closer()
+	defer _close()
 
-	fmt.Println("Go Play Poker!")
+	game := api.NewTexasHoldem(api.BlindAlerterFunc(api.StdOutAlerter), store)
+	cli := api.NewCLI(os.Stdin, os.Stdout, game)
+
+	fmt.Println("Let's play api")
 	fmt.Println("Type {Name} wins to record a win")
-	game := api.NewCLI(storage, os.Stdin)
-	game.PlayPoker()
+	cli.PlayPoker()
 }

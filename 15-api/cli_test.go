@@ -1,65 +1,127 @@
 package api
 
 import (
-	"fmt"
+	"bytes"
+	"io"
 	"strings"
 	"testing"
-	"time"
 )
 
-var dummySpyAlerter = &SpyBlindAlerter{}
+var dummyBlindAlerter = &SpyBlindAlerter{}
+var dummyPlayerStore = &StubPlayerStore{}
+var dummyStdIn = &bytes.Buffer{}
+var dummyStdOut = &bytes.Buffer{}
+
+type GameSpy struct {
+	StartCalled     bool
+	StartCalledWith int
+
+	FinishedCalled   bool
+	FinishCalledWith string
+}
+
+func (g *GameSpy) Start(numberOfPlayers int) {
+	g.StartCalled = true
+	g.StartCalledWith = numberOfPlayers
+}
+
+func (g *GameSpy) Finish(winner string) {
+	g.FinishedCalled = true
+	g.FinishCalledWith = winner
+}
+
+func userSends(messages ...string) io.Reader {
+	return strings.NewReader(strings.Join(messages, "\n"))
+}
 
 func TestCLI(t *testing.T) {
-	t.Run("record Chris win from user input", func(t *testing.T) {
-		in := strings.NewReader("Chris wins\n")
-		playerStorage := &StubStoragePlayer{}
 
-		cli := NewCLI(playerStorage, in, nil)
+	t.Run("start game with 3 players and finish game with 'Chris' as winner", func(t *testing.T) {
+		game := &GameSpy{}
+		stdout := &bytes.Buffer{}
+
+		in := userSends("3", "Chris wins")
+		cli := NewCLI(in, stdout, game)
+
 		cli.PlayPoker()
 
-		CheckPlayerWin(t, playerStorage, "Chris")
+		assertMessagesSentToUser(t, stdout, PlayerPrompt)
+		assertGameStartedWith(t, game, 3)
+		assertFinishCalledWith(t, game, "Chris")
 	})
 
-	t.Run("record Cleo win from user input", func(t *testing.T) {
-		in := strings.NewReader("Cleo wins\n")
-		playerStorage := &StubStoragePlayer{}
+	t.Run("start game with 8 players and record 'Cleo' as winner", func(t *testing.T) {
+		game := &GameSpy{}
 
-		cli := NewCLI(playerStorage, in, nil)
+		in := userSends("8", "Cleo wins")
+		cli := NewCLI(in, dummyStdOut, game)
+
 		cli.PlayPoker()
 
-		CheckPlayerWin(t, playerStorage, "Cleo")
+		assertGameStartedWith(t, game, 8)
+		assertFinishCalledWith(t, game, "Cleo")
 	})
 
-	t.Run("should schedules printing of blind values", func(t *testing.T) {
-		in := strings.NewReader("Chris wins\n")
-		playerStorage := &StubStoragePlayer{}
-		blindAlerter := &SpyBlindAlerter{}
+	t.Run("it prints an error when a non numeric value is entered and does not start the game", func(t *testing.T) {
+		game := &GameSpy{}
 
-		cli := NewCLI(playerStorage, in, blindAlerter)
+		stdout := &bytes.Buffer{}
+		in := userSends("pies")
+
+		cli := NewCLI(in, stdout, game)
 		cli.PlayPoker()
 
-		cases := []scheduledAlert{
-			{0, 100},
-			{10 * time.Second, 200},
-			{20 * time.Second, 300},
-			{30 * time.Second, 400},
-			{40 * time.Second, 500},
-			{50 * time.Second, 600},
-			{60 * time.Second, 800},
-			{70 * time.Second, 1000},
-			{80 * time.Second, 2000},
-			{90 * time.Second, 4000},
-			{100 * time.Second, 8000},
-		}
-
-		for i, want := range cases {
-			t.Run(fmt.Sprint(want), func(t *testing.T) {
-				if len(blindAlerter.alerts) <= i {
-					t.Fatalf("alert %d was not scheduled %v", i, blindAlerter.alerts)
-				}
-				got := blindAlerter.alerts[i]
-				assertScheduledAlert(t, got, want)
-			})
-		}
+		assertGameNotStarted(t, game)
+		assertMessagesSentToUser(t, stdout, PlayerPrompt, BadPlayerInputErrMsg)
 	})
+
+	t.Run("it prints an error when the winner is declared incorrectly", func(t *testing.T) {
+		game := &GameSpy{}
+		stdout := &bytes.Buffer{}
+
+		in := userSends("8", "Lloyd is a killer")
+		cli := NewCLI(in, stdout, game)
+
+		cli.PlayPoker()
+
+		assertGameNotFinished(t, game)
+		assertMessagesSentToUser(t, stdout, PlayerPrompt, BadWinnerInputErrMsg)
+	})
+}
+
+func assertGameStartedWith(t *testing.T, game *GameSpy, numberOfPlayersWanted int) {
+	t.Helper()
+	if game.StartCalledWith != numberOfPlayersWanted {
+		t.Errorf("wanted Start called with %d but got %d", numberOfPlayersWanted, game.StartCalledWith)
+	}
+}
+
+func assertGameNotFinished(t *testing.T, game *GameSpy) {
+	t.Helper()
+	if game.FinishedCalled {
+		t.Errorf("game should not have finished")
+	}
+}
+
+func assertGameNotStarted(t *testing.T, game *GameSpy) {
+	t.Helper()
+	if game.StartCalled {
+		t.Errorf("game should not have started")
+	}
+}
+
+func assertFinishCalledWith(t *testing.T, game *GameSpy, winner string) {
+	t.Helper()
+	if game.FinishCalledWith != winner {
+		t.Errorf("expected finish called with '%s' but got '%s'", winner, game.FinishCalledWith)
+	}
+}
+
+func assertMessagesSentToUser(t *testing.T, stdout *bytes.Buffer, messages ...string) {
+	t.Helper()
+	want := strings.Join(messages, "")
+	got := stdout.String()
+	if got != want {
+		t.Errorf("got '%s' sent to stdout but expected %+v", got, messages)
+	}
 }

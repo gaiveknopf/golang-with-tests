@@ -6,50 +6,50 @@ import (
 	"time"
 )
 
-type StubStoragePlayer struct {
+type StubPlayerStore struct {
 	score    map[string]int
 	winCalls []string
 	league   []Player
 }
 
 type SpyBlindAlerter struct {
-	alerts []scheduledAlert
+	Alerts []ScheduledAlert
 }
 
-type scheduledAlert struct {
-	at     time.Duration
-	amount int
+type ScheduledAlert struct {
+	At     time.Duration
+	Amount int
 }
 
-func (s scheduledAlert) String() string {
-	return fmt.Sprintf("%d chips at %v", s.amount, s.at)
+func (s ScheduledAlert) String() string {
+	return fmt.Sprintf("%d chips at %v", s.Amount, s.At)
 }
 
 func (s *SpyBlindAlerter) ScheduleAlertAt(duration time.Duration, amount int) {
-	s.alerts = append(s.alerts, scheduledAlert{duration, amount})
+	s.Alerts = append(s.Alerts, ScheduledAlert{duration, amount})
 }
 
-func (s *StubStoragePlayer) GetPlayerScore(name string) int {
+func (s *StubPlayerStore) GetPlayerScore(name string) int {
 	score := s.score[name]
 	return score
 }
 
-func (s *StubStoragePlayer) RecordWin(name string) {
+func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-func (s *StubStoragePlayer) GetLeague() League {
+func (s *StubPlayerStore) GetLeague() League {
 	return s.league
 }
 
-func assertScheduledAlert(t *testing.T, got, want scheduledAlert) {
+func assertScheduledAlert(t *testing.T, got, want ScheduledAlert) {
 	t.Helper()
 	if got != want {
 		t.Errorf("got scheduled alert %v, want %v", got, want)
 	}
 }
 
-func CheckPlayerWin(t *testing.T, store *StubStoragePlayer, winner string) {
+func AssertPlayerWin(t *testing.T, store *StubPlayerStore, winner string) {
 	t.Helper()
 
 	if len(store.winCalls) != 1 {

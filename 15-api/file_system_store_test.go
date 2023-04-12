@@ -13,7 +13,7 @@ func TestFileDBPlayer(t *testing.T) {
 		]`)
 		defer clearDatabase()
 
-		storage, err := NewFileDB(database)
+		storage, err := NewFileSystemPlayerStore(database)
 		checkNoError(t, err)
 
 		got := storage.GetLeague()
@@ -32,7 +32,7 @@ func TestFileDBPlayer(t *testing.T) {
             {"Name": "Chris", "Wins": 33}]`)
 		defer clearDatabase()
 
-		storage, err := NewFileDB(database)
+		storage, err := NewFileSystemPlayerStore(database)
 		checkNoError(t, err)
 
 		got := storage.GetPlayerScore("Chris")
@@ -47,7 +47,7 @@ func TestFileDBPlayer(t *testing.T) {
 		]`)
 		defer clearDatabase()
 
-		storage, err := NewFileDB(database)
+		storage, err := NewFileSystemPlayerStore(database)
 		checkNoError(t, err)
 
 		storage.RecordWin("Maria")
@@ -65,7 +65,7 @@ func TestFileDBPlayer(t *testing.T) {
 		]`)
 		defer clearDatabase()
 
-		storage, err := NewFileDB(database)
+		storage, err := NewFileSystemPlayerStore(database)
 		checkNoError(t, err)
 
 		storage.RecordWin("Cleo")
